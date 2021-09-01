@@ -1,0 +1,41 @@
+absa_dirs:
+- data_files
+classification: true
+classification_domain: laptops
+classification_epochs: 1
+classification_samples_per_domain: 2000
+classification_type: threshold
+domains:
+- bigram_index: sim_index_09-05-21/fasttext_rest_bigrams_no_stopwords.json
+  class_threshold: 0.3
+  file_path: unlabeled_data/rest.reviews.sample.raw
+  name: rest
+  threshold: 90
+  unigram_index: sim_index_11-05-21/fasttext_rest_unigrams_no_stopwords.json
+- bigram_index: sim_index_09-05-21/fasttext_laptops_bigrams_no_stopwords.json
+  class_threshold: 0.406
+  file_path: unlabeled_data/laptop.reviews.raw
+  name: laptops
+  threshold: 90
+  unigram_index: sim_index_11-05-21/fasttext_laptops_unigrams_no_stopwords.json
+gpu: true
+gpu_num: '1'
+in_domain: false
+masking: unigram
+masking_params: ''
+model_name_or_path: bert-base-uncased
+model_type: bert
+ner_dropout: 0
+num_ner_epochs: 3
+output_path: dilbert-model-new
+save_steps: 0
+seed: 1948
+selected_domains:
+- laptops
+- rest
+server: nlp14
+status: waiting
+embedding_model: custom_fasttext
+embedding_model_path: embeddings/custom_embeddings3
+tasks:
+  - laptops_rest
