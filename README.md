@@ -70,7 +70,7 @@ There are already directories for: rest, laptops and mams datasets.
 ### 4. Run a training
 The `main.py` script runs the whole process.
 
-To tun the full process you can run:
+To run the full process you can simply run:
 ```
 python main.py --training_file trainins/sample.yaml --gpu 0
 ```
@@ -79,8 +79,7 @@ training_file - A yaml that sets the experiment
 
 gpu - On which device to run. DILBERT was run on a single gpu card.
 
-It gets a training configuration as a parameter.
-
+## A more detailed explanation of the training yaml:
 There is an example in `trainings/sample.yaml`
 
 ```
@@ -90,19 +89,18 @@ classification: true
 classification_domain: laptops
 classification_epochs: 1
 classification_samples_per_domain: 2000
-mlm_thresholds:
-  rest: 90
-  laptops: 90
 classification_thresholds:
   rest: 0.3
   laptops: 0.3
+mlm_thresholds:
+  rest: 90
+  laptops: 90
 masking: unigram
 pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
-num_ner_epochs: 3
 num_cmlm_epochs: 1
 output_path: dilbert-v1-new2
-save_steps: 0
+num_ner_epochs: 3
 seed: 1948
 selected_domains:
 - laptops
@@ -111,6 +109,9 @@ embedding_model: custom_fasttext
 tasks:
   - laptops
 ```
+
+Explanation on the different fields: 
+
 absa_dirs - The dir where the domain directories exist.
 
 classification - Whether to run the CPP step.
