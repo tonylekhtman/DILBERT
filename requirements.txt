@@ -1,0 +1,4 @@
+torch
+transformers
+seqeval
+gensim==3.4.0

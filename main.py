@@ -101,23 +101,6 @@ try:
 
     if d['masking'] == 'unigram':
         list_of_args = add_unigram_masking_params(list_of_args)
-    elif d['masking'] == 'bigram':
-        list_of_args = add_unigram_masking_params(list_of_args)
-        for domain in [x for x in d['domains'] if x['name'] in selected_domain_names]:
-            if not os.path.exists(domain['bigram_index']):
-                max_sim_args = ['--fasttext', '--domain', domain['name'], '--n', '2', '--output',
-                                domain['bigram_index'],
-                                '--path', domain['file_path']]
-                create_index(max_sim_parser.parse_args(max_sim_args))
-
-        bigram_indexes = [domain['bigram_index'] for domain in d['domains'] if
-                          domain['name'] in selected_domain_names]
-
-        list_of_args += ['--bigram_masking', '--bigram_indexes'] + bigram_indexes
-        bigram_thresholds = [str(domain.get('bigram_threshold', domain['threshold'])) for domain in d['domains']
-                             if
-                             domain['name'] in selected_domain_names]
-        list_of_args += ['--bigram_thresholds'] + bigram_thresholds
 
     args = parser.parse_args(list_of_args)
     print(args)
@@ -130,7 +113,7 @@ try:
             reviews_to_similarities[domain_name] = create_dataset(
                 file_path,
                 domain_name,
-                f'reviews_res_{domain_name}_sentence_{embedding_model_path}.json',
+                f'reviews_cache_{domain_name}_{os.path.basename(embedding_model_path)}.json',
                 embedding_model_path, d)
 
         if d.get('classification_type', 'threshold') == 'threshold':

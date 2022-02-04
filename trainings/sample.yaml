@@ -4,27 +4,24 @@ classification: true
 classification_domain: laptops
 classification_epochs: 1
 classification_samples_per_domain: 2000
-mlm_thresholds:
-  rest: 90
-  laptops: 90
 classification_thresholds:
   rest: 0.3
   laptops: 0.3
-gpu: true
-gpu_num: '1'
-in_domain: false
-masking: unigram
 pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
-ner_dropout: 0
-num_ner_epochs: 3
+mlm_thresholds:
+  rest: 90
+  laptops: 90
+masking: unigram
 num_cmlm_epochs: 1
-output_path: dilbert-v1-new2
-save_steps: 0
+gpu: true
+gpu_num: '1'
+num_ner_epochs: 3
+output_path: dilbert-v1-new3
 seed: 1948
 selected_domains:
 - laptops
 - rest
 embedding_model: custom_fasttext
 tasks:
-  - laptops
+  - laptops_mams

@@ -120,7 +120,19 @@ masking - Whether to run CMLM, `none` for no CMLM, `unigram` for CMLM
 
 model_type - What kind of transformer to use. Tested on bert.
 
+pre_trained_model_name_or_path - What subtype of the model_type to use. Tested on bert-base-uncased
 
+num_ner_epochs - number of epochs for the fine-tune on Aspect Extraction.
+
+num_cmlm_epochs - number of epochs for the cmlm pre-training.
+
+output_path - The output name for the cmlm model.
+
+selected_domains - The domains to use in the pre-training steps: CMLM and CPP.
+
+embedding_model - Whether to use custom embeddings or not. Options are custom_fasttext or fasttext.
+
+tasks - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
 
 
 To tun the full process you can run:

@@ -71,7 +71,7 @@ parser.add_argument("--warmup_steps", default=0, type=int,
 
 parser.add_argument("--logging_steps", type=int, default=50,
                     help="Log every X updates steps.")
-parser.add_argument("--save_steps", type=int, default=50,
+parser.add_argument("--save_steps", type=int, default=0,
                     help="Save checkpoint every X updates steps.")
 parser.add_argument("--eval_all_checkpoints", action="store_true",
                     help="Evaluate all checkpoints starting with the same prefix as model_name ending and ending with step number")
