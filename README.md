@@ -43,7 +43,7 @@ python get_rest_domain_data.py
 ```
 
 
-To get the laptops unlabeled data you can go to: https://nijianmo.github.io/amazon/index.html.
+To get the laptops unlabeled data you can go to: https://nijianmo.github.io/amazon/index.html to the Electronics category.
 Put the files: meta_Electronics.json.gz and Electronics.json.gz in the `unlabeled_data` dir and then:
 ```
 cd unlabeled_data
@@ -53,7 +53,7 @@ python get_laptop_domain_data.py
 ### 3. Obtain data for your downstream task
 In the `ae_files` you can create a directory for your domain.
 
-The files in the directory are in the BIO style, for example:
+The files in the directory are in the BIO format, for example:
 ```
 But O
 the O
@@ -116,7 +116,7 @@ absa_dirs - The dir where the domain directories exist.
 
 classification - Whether to run the CPP step.
 
-classification_domain - on which domain to run the CPP.
+classification_domain - on which domain to run the CPP. If you remove this column, it will run on both domains.
 
 classification_epochs - Number of epochs for CPP.
 

@@ -259,14 +259,9 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
             out_label_ids = np.append(out_label_ids, inputs["labels"].detach().cpu().numpy(), axis=0)
             samples = np.append(samples, inputs["input_ids"].detach().cpu().numpy(), axis=0)
     eval_loss = eval_loss / nb_eval_steps
-    prob_preds = torch.sigmoid(torch.Tensor(preds))
 
     preds = np.argmax(preds, axis=2)
-    # preds_final = []
-    # for p in preds:
-    #    preds_final.append([np.argmax(x) if x[2] > args.f1_threshold else np.argmax(x[0:2]) for x in np.array(torch.nn.Softmax()(torch.Tensor(p)))])
 
-    # preds = preds_final
     out_label_list = [[] for _ in range(out_label_ids.shape[0])]
     preds_list = [[] for _ in range(out_label_ids.shape[0])]
     samples_list = [[] for _ in range(out_label_ids.shape[0])]
@@ -300,98 +295,6 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
             [1 if len(get_entities(x)) > 0 else 0 for x in preds_list]),
         f"{prefix}partial_f1": my_f1_score(out_label_list, preds_list)
     }
-
-    false_positives_accumulated = []
-    false_positive_samples = defaultdict(list)
-    false_negative_samples = defaultdict(list)
-    false_negatives_accumulated = []
-    sampled_ids = range(len(samples_list))  # random.sample(range(len(samples_list)), 30)
-
-    verbose_evaluation = False
-    if verbose_evaluation:
-        from gensim.models import FastText
-        embedding_model = FastText.load_fasttext_format('embeddings/cc.en.300.bin')
-
-        domain_categories = get_cats(task.split('_')[1])
-        with open(
-                f'sample_examples/{os.path.basename(args.model_name_or_path)}_{os.path.dirname(args.data_dir)}_{os.path.basename(args.data_dir)}',
-                'w+') as output_sample_example:
-            for i, (sample, prediction, gt) in enumerate(zip(samples_list, preds_list, out_label_list)):
-                if i in sampled_ids:
-                    predicted_entities_indexes = get_entities(prediction)
-                    true_entities_indexes = get_entities(gt)
-                    common_indexes = (set(predicted_entities_indexes) & set(true_entities_indexes))
-                    false_positive_entities_indexes = set(predicted_entities_indexes) - common_indexes
-                    false_negative_entities_indexes = set(true_entities_indexes) - common_indexes
-                    predicted_entities = get_entities_text(predicted_entities_indexes, sample)
-                    true_entities = get_entities_text(true_entities_indexes, sample)
-                    false_positives = get_entities_text(false_positive_entities_indexes, sample)
-                    false_negatives = get_entities_text(false_negative_entities_indexes, sample)
-                    if len(false_negatives) == 0 and len(false_positives) == 0 and len(true_entities) > 0:
-                        with open(
-                                f'sample_examples_corrects/{os.path.basename(args.model_name_or_path)}_{os.path.dirname(args.data_dir)}_{os.path.basename(args.data_dir)}',
-                                'a+') as output_corrects:
-                            output_corrects.write(
-                                f'{" ".join(sample)}###{",".join([" ".join(t) for t in true_entities])}\n')
-
-                    print(f'sample: {" ".join(sample)}')
-                    output_sample_example.write(f'sample: {" ".join(sample)}' + '\n')
-                    print('masked sample:')
-                    similarities = []
-                    for word in sample:
-                        similarity = get_max_cat_similarity(word, domain_categories, embedding_model, calc_similarity)
-                        similarities.append(similarity)
-                    sim = np.percentile(similarities, 90)
-                    print(' '.join(
-                        [f'{word}' if word_sim < sim else f'##{word}## ({word_sim})' for word, word_sim in
-                         zip(sample, similarities)]))
-                    output_sample_example.write('masked example:' + ' '.join(
-                        [f'{word}' if word_sim < sim else f'##{word}## ({word_sim})' for word, word_sim in
-                         zip(sample, similarities)]) + '\n')
-                    print('\n')
-                    print('predicted entities:')
-                    output_sample_example.write('predicted entities:' + '\n')
-                    for predicted_entity in predicted_entities:
-                        print(f"\t{' '.join(predicted_entity)}")
-                        output_sample_example.write(' '.join(predicted_entity) + '\n')
-                        # print('\n')
-                    print('\n')
-                    print('true entities:')
-                    output_sample_example.write('true_entities:' + '\n')
-                    for true_entity in true_entities:
-                        print(f"\t{' '.join(true_entity)}")
-                        output_sample_example.write(' '.join(true_entity) + '\n')
-                        # print('\n')
-                    print('\n')
-                    print('false positives:')
-                    output_sample_example.write('false positives:' + '\n')
-                    for fp_entity in false_positives:
-                        fp_entity_text = ' '.join(fp_entity)
-                        false_positives_accumulated.append(fp_entity_text)
-                        false_positive_samples[fp_entity_text].append(sample)
-                        print(f'\t{fp_entity_text}')
-                        output_sample_example.write(fp_entity_text + '\n')
-                    print('\n')
-                    print('false negatives:')
-                    output_sample_example.write('false negatives:' + '\n')
-                    for fn_entity in false_negatives:
-                        fn_entity_text = ' '.join(fn_entity)
-                        false_negatives_accumulated.append(fn_entity_text)
-                        false_negative_samples[fn_entity_text].append(sample)
-                        print(f'\t{fn_entity_text}')
-                        output_sample_example.write(fn_entity_text + '\n')
-
-                # for word, word_sim in zip(sample, similarities):
-                #     if word_sim > sim:
-                #         print(f'word:{word}')
-                #         print(f'word_sim: {word_sim}')
-
-            print(f'Summary of false positives:')
-            print(Counter(false_positives_accumulated))
-            print(f'Summary of false negatives:')
-            print(Counter(false_negatives_accumulated))
-            print(false_positive_samples['price'])
-            print(false_negative_samples['food'])
     logger.info("***** Eval results %s *****", prefix)
     for key in sorted(results.keys()):
         logger.info("  %s = %s", key, str(results[key]))
