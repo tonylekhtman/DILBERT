@@ -70,6 +70,15 @@ There are already directories for: rest, laptops and mams datasets.
 ### 4. Run a training
 The `main.py` script runs the whole process.
 
+To tun the full process you can run:
+```
+python main.py --training_file trainins/sample.yaml --gpu 0
+```
+
+training_file - A yaml that sets the experiment
+
+gpu - On which device to run. DILBERT was run on a single gpu card.
+
 It gets a training configuration as a parameter.
 
 There is an example in `trainings/sample.yaml`
@@ -135,13 +144,7 @@ embedding_model - Whether to use custom embeddings or not. Options are custom_fa
 tasks - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
 
 
-To tun the full process you can run:
-```
-python main.py --training_file trainins/sample.yaml --gpu 0
-```
 
-training_file - A yaml that sets the experiment
-gpu - On which device to run
 
 
 
