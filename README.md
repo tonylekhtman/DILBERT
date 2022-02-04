@@ -145,7 +145,24 @@ embedding_model - Whether to use custom embeddings or not. Options are custom_fa
 tasks - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
 
 
-
+## How to Cite DILBERT
+```
+@inproceedings{lekhtman-etal-2021-dilbert,
+    title = "{DILBERT}: Customized Pre-Training for Domain Adaptation with Category Shift, with an Application to Aspect Extraction",
+    author = "Lekhtman, Entony  and
+      Ziser, Yftah  and
+      Reichart, Roi",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-main.20",
+    doi = "10.18653/v1/2021.emnlp-main.20",
+    pages = "219--230",
+    abstract = "The rise of pre-trained language models has yielded substantial progress in the vast majority of Natural Language Processing (NLP) tasks. However, a generic approach towards the pre-training procedure can naturally be sub-optimal in some cases. Particularly, fine-tuning a pre-trained language model on a source domain and then applying it to a different target domain, results in a sharp performance decline of the eventual classifier for many source-target domain pairs. Moreover, in some NLP tasks, the output categories substantially differ between domains, making adaptation even more challenging. This, for example, happens in the task of aspect extraction, where the aspects of interest of reviews of, e.g., restaurants or electronic devices may be very different. This paper presents a new fine-tuning scheme for BERT, which aims to address the above challenges. We name this scheme DILBERT: Domain Invariant Learning with BERT, and customize it for aspect extraction in the unsupervised domain adaptation setting. DILBERT harnesses the categorical information of both the source and the target domains to guide the pre-training process towards a more domain and category invariant representation, thus closing the gap between the domains. We show that DILBERT yields substantial improvements over state-of-the-art baselines while using a fraction of the unlabeled data, particularly in more challenging domain adaptation setups.",
+}
+```
 
 
 
