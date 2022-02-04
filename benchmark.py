@@ -14,7 +14,9 @@ from run_ner import MODEL_CLASSES, run_ner_with_args
 parser = argparse.ArgumentParser()
 
 ## Required parameters
-parser.add_argument("--data_dir", default=None, type=str, required=True,
+parser.add_argument("--train_file_path", default=None, type=str, required=True,
+                    help="The input data dir. Should contain the training files for the CoNLL-2003 NER task.")
+parser.add_argument("--eval_file_path", default=None, type=str, required=True,
                     help="The input data dir. Should contain the training files for the CoNLL-2003 NER task.")
 parser.add_argument("--model_type", default=None, type=str, required=True,
                     help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
@@ -103,21 +105,21 @@ def generate_output_model_name():
     return next(tempfile._get_candidate_names())
 
 
-def run_single_task(dataset, pt_model, data_dirs, gpu=True, config=None):
+def run_single_task(train_file_path, eval_file_path, task, pt_model, data_dirs, gpu=True, config=None):
     if config is not None:
-        config['task'] = dataset
+        config['task'] = task
     output = generate_output_model_name()
     metrics = defaultdict(list)
     for data_dir in data_dirs:
         seed = config['seed']  # random.randrange(100000)
-        # file_path = [x for x in config['domains'] if x['name'] == dataset.split('_')[1]][0]['file_path']
 
-        ner_args = ["--data_dir", f"{data_dir}/{dataset}", "--model_type", "bert", "--model_name_or_path",
+        ner_args = ["--train_file_path", train_file_path, "--eval_file_path", eval_file_path, "--model_type", "bert",
+                    "--model_name_or_path",
                     f"{pt_model}", "--output",
-                    f"ae_models/{output}", "--labels", "data_files/labels.txt", "--do_eval",
-                    "--seed", str(seed), "--save_steps", "750", "--per_gpu_train_batch_size", str(config['train_batch_size']),
+                    f"ae_models/{output}", "--labels", "ae_files/labels.txt", "--do_eval",
+                    "--seed", str(seed), "--save_steps", "750", "--per_gpu_train_batch_size",
+                    str(config['train_batch_size']),
                     "--max_seq_length", "128", "--overwrite_output_dir", "--do_lower_case", "--do_train",
-                    "--do_predict",
                     "--num_train_epochs", str(config['num_ner_epochs']), '--ner_dropout', str(config['ner_dropout']),
                     '--ner_sampled_examples', '--tgt_snts_file', 'stam', '--sampling_model_path', f"{pt_model}",
                     '--f1_threshold', str(config['f1_threshold']), '--learning_rate', str(config['ae_lr'])]
@@ -128,13 +130,11 @@ def run_single_task(dataset, pt_model, data_dirs, gpu=True, config=None):
         results = run_ner_with_args(args)
         for metric in results:
             metrics[metric].append(results[metric])
-    print(dataset)
     mean_results = {}
     for k in metrics:
         mean_results[k] = np.mean(metrics[k])
         mean_results[f'{k}_std'] = np.std(metrics[k])
     return mean_results
-
 
 
 def run_benchmark(models, tasks, ner_data_files_dirs, unique_id=None, gpu=True, config=None):
@@ -143,13 +143,14 @@ def run_benchmark(models, tasks, ner_data_files_dirs, unique_id=None, gpu=True, 
     for model in models:
         final_results = {}
         for task in tasks:
-            f1_res = run_single_task(task, f'{model}', ner_data_files_dirs, gpu, config)
+            splitted_task = task.split('_')
+            train_file_path = f'ae_files/{splitted_task[0]}/train.txt'
+            eval_file_path = f'ae_files/{splitted_task[-1]}/dev.txt'
+            f1_res = run_single_task(train_file_path, eval_file_path, task, model, ner_data_files_dirs, gpu,
+                                     config)
             model_name = os.path.basename(model)
             final_results[f'{model_name}_{task}'] = f1_res
             # final_results[f'{model_name}']['task'] = task
         df = pd.DataFrame(final_results)
         dfs.append(df)
     res = pd.concat(dfs, axis=1)
-
-
-

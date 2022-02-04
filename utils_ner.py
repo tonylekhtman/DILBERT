@@ -51,8 +51,7 @@ class InputFeatures(object):
         self.label_ids = label_ids
 
 
-def read_examples_from_file(data_dir, mode):
-    file_path = os.path.join(data_dir, "{}.txt".format(mode))
+def read_examples_from_file(file_path, mode):
     if not os.path.exists(file_path):
         return []
     guid_index = 1

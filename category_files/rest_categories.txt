@@ -1,0 +1,9 @@
+style
+location
+service
+prices
+ambience
+restaurant
+drinks
+quality
+food

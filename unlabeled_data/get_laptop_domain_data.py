@@ -6,7 +6,7 @@ relevant_cats = ['Laptops', 'laptops']
 metadata_file = 'meta_Electronics.json.gz'
 reviews_file = 'Electronics.json.gz'
 cached_file = 'only_laptop_reviews.csv'
-output_file = 'laptop.reviews.raw'
+output_file = 'laptops.raw'
 
 
 def parse(path):

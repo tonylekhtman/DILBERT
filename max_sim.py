@@ -1,6 +1,7 @@
 # get the BertTokenizer as used in training and tokenize the long yelp and amazon texts
 import argparse
 import json
+import logging
 import os
 import string
 
@@ -135,6 +136,7 @@ max_sim_parser.add_argument('--path', type=str)
 
 def create_index(args):
     current_domain = args.domain
+    print(f'Creating similarity index for: {current_domain}')
     if args.fasttext or args.embedding_model == 'fasttext' or args.embedding_model == 'custom_fasttext':
         from gensim.models.wrappers import FastText
 

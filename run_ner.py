@@ -87,7 +87,7 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
         {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0}
     ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps*t_total,
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps * t_total,
                                                 num_training_steps=t_total)
     if args.fp16:
         try:
@@ -212,7 +212,8 @@ def my_f1_score(y_true, y_pred, average='micro', suffix=False):
 
 
 def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""):
-    eval_dataset = load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode=mode)
+    eval_dataset = load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, file_path=args.eval_file_path,
+                                           mode=mode)
     if not eval_dataset:
         return None, None
     label_map = {i: label for i, label in enumerate(labels)}
@@ -291,8 +292,9 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
         f"{prefix}f1_only_gt_with_as>0": f1_score(
             np.array(out_label_list)[[y for y, x in enumerate(out_label_list) if any(i != 'O' for i in x)]],
             np.array(preds_list)[[y for y, x in enumerate(out_label_list) if any(i != 'O' for i in x)]]),
-        f"{prefix}f1_recognizing_no_aspect": reg_f1_score([1 if len(get_entities(x)) == 0 else 0 for x in out_label_list],
-                                                 [1 if len(get_entities(x)) == 0 else 0 for x in preds_list]),
+        f"{prefix}f1_recognizing_no_aspect": reg_f1_score(
+            [1 if len(get_entities(x)) == 0 else 0 for x in out_label_list],
+            [1 if len(get_entities(x)) == 0 else 0 for x in preds_list]),
         f"{prefix}f1_recognizing_more_than_1_aspect": reg_f1_score(
             [1 if len(get_entities(x)) > 0 else 0 for x in out_label_list],
             [1 if len(get_entities(x)) > 0 else 0 for x in preds_list]),
@@ -303,10 +305,8 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
     false_positive_samples = defaultdict(list)
     false_negative_samples = defaultdict(list)
     false_negatives_accumulated = []
-    print(args.data_dir)
-    sampled_ids = range(len(samples_list)) #random.sample(range(len(samples_list)), 30)
+    sampled_ids = range(len(samples_list))  # random.sample(range(len(samples_list)), 30)
 
-    task = args.data_dir.split('/')[-1]
     verbose_evaluation = False
     if verbose_evaluation:
         from gensim.models import FastText
@@ -328,8 +328,11 @@ def evaluate(args, model, tokenizer, labels, pad_token_label_id, mode, prefix=""
                     false_positives = get_entities_text(false_positive_entities_indexes, sample)
                     false_negatives = get_entities_text(false_negative_entities_indexes, sample)
                     if len(false_negatives) == 0 and len(false_positives) == 0 and len(true_entities) > 0:
-                        with open(f'sample_examples_corrects/{os.path.basename(args.model_name_or_path)}_{os.path.dirname(args.data_dir)}_{os.path.basename(args.data_dir)}', 'a+') as output_corrects:
-                            output_corrects.write(f'{" ".join(sample)}###{",".join([" ".join(t) for t in true_entities])}\n')
+                        with open(
+                                f'sample_examples_corrects/{os.path.basename(args.model_name_or_path)}_{os.path.dirname(args.data_dir)}_{os.path.basename(args.data_dir)}',
+                                'a+') as output_corrects:
+                            output_corrects.write(
+                                f'{" ".join(sample)}###{",".join([" ".join(t) for t in true_entities])}\n')
 
                     print(f'sample: {" ".join(sample)}')
                     output_sample_example.write(f'sample: {" ".join(sample)}' + '\n')
@@ -406,52 +409,28 @@ def get_entities_text(predicted_entities_indexes, sample):
     return predicted_entities
 
 
-def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode,model=None):
-    if args.local_rank not in [-1, 0] and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
-
+def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, file_path, mode):
     # Load data features from cache or dataset file
-    cached_features_file = os.path.join(args.data_dir, "cached_{}_{}_{}".format(mode,
-                                                                                list(filter(None,
-                                                                                            args.model_name_or_path.split(
-                                                                                                "/"))).pop(),
-                                                                                str(args.max_seq_length)))
-    if os.path.exists(cached_features_file) and not args.overwrite_cache:
-        logger.info("Loading features from cached file %s", cached_features_file)
-        features = torch.load(cached_features_file)
-    else:
-        logger.info("Creating features from dataset file at %s", args.data_dir)
-        # tgt_sentences = open(args.tgt_snts_file).readlines()
-        # sents = [y for x in random.sample(tgt_sentences, 100) for y in sent_tokenize(x)]
 
-        examples = read_examples_from_file(args.data_dir, mode)
-        if len(examples) == 0:
-            return
-        # if args.ner_sampled_examples:
-        #     examples = get_best_examples(examples,args.tgt_snts_file, args.sampling_model_path,args.ner_sampled_percent)
+    logger.info("Creating features from dataset file at %s", file_path)
 
-        # mean_examples = np.mean(model(**tokenizer.batch_encode_plus(sents, return_tensors='pt'))[1][11], axis=1)
-        # mean_sents = np.mean(model(**tokenizer.batch_encode_plus(sents,return_tensors='pt'))[1][11],axis=1)
-        features = convert_examples_to_features(examples, labels, args.max_seq_length, tokenizer,
-                                                cls_token_at_end=bool(args.model_type in ["xlnet"]),
-                                                # xlnet has a cls token at the end
-                                                cls_token=tokenizer.cls_token,
-                                                cls_token_segment_id=2 if args.model_type in ["xlnet"] else 0,
-                                                sep_token=tokenizer.sep_token,
-                                                sep_token_extra=bool(args.model_type in ["roberta"]),
-                                                # roberta uses an extra separator b/w pairs of sentences, cf. github.com/pytorch/fairseq/commit/1684e166e3da03f5b600dbb7855cb98ddfcd0805
-                                                pad_on_left=bool(args.model_type in ["xlnet"]),
-                                                # pad on the left for xlnet
-                                                pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
-                                                pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
-                                                pad_token_label_id=pad_token_label_id
-                                                )
-        if args.local_rank in [-1, 0]:
-            logger.info("Saving features into cached file %s", cached_features_file)
-            torch.save(features, cached_features_file)
-
-    if args.local_rank == 0 and not evaluate:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+    examples = read_examples_from_file(file_path, mode)
+    if len(examples) == 0:
+        return
+    features = convert_examples_to_features(examples, labels, args.max_seq_length, tokenizer,
+                                            cls_token_at_end=bool(args.model_type in ["xlnet"]),
+                                            # xlnet has a cls token at the end
+                                            cls_token=tokenizer.cls_token,
+                                            cls_token_segment_id=2 if args.model_type in ["xlnet"] else 0,
+                                            sep_token=tokenizer.sep_token,
+                                            sep_token_extra=bool(args.model_type in ["roberta"]),
+                                            # roberta uses an extra separator b/w pairs of sentences, cf. github.com/pytorch/fairseq/commit/1684e166e3da03f5b600dbb7855cb98ddfcd0805
+                                            pad_on_left=bool(args.model_type in ["xlnet"]),
+                                            # pad on the left for xlnet
+                                            pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
+                                            pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
+                                            pad_token_label_id=pad_token_label_id
+                                            )
 
     # Convert to Tensors and build dataset
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -463,94 +442,6 @@ def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode,mo
     return dataset
 
 
-def main():
-    parser = argparse.ArgumentParser()
-
-    ## Required parameters
-    parser.add_argument("--data_dir", default=None, type=str, required=True,
-                        help="The input data dir. Should contain the training files for the CoNLL-2003 NER task.")
-    parser.add_argument("--model_type", default=None, type=str, required=True,
-                        help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
-    parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: ")
-    parser.add_argument("--output_dir", default=None, type=str, required=True,
-                        help="The output directory where the model predictions and checkpoints will be written.")
-
-    ## Other parameters
-    parser.add_argument("--labels", default="", type=str,
-                        help="Path to a file containing all labels. If not specified, CoNLL-2003 labels are used.")
-    parser.add_argument("--config_name", default="", type=str,
-                        help="Pretrained config name or path if not the same as model_name")
-    parser.add_argument("--tokenizer_name", default="", type=str,
-                        help="Pretrained tokenizer name or path if not the same as model_name")
-    parser.add_argument("--cache_dir", default="", type=str,
-                        help="Where do you want to store the pre-trained models downloaded from s3")
-    parser.add_argument("--max_seq_length", default=128, type=int,
-                        help="The maximum total input sequence length after tokenization. Sequences longer "
-                             "than this will be truncated, sequences shorter will be padded.")
-    parser.add_argument("--do_train", action="store_true",
-                        help="Whether to run training.")
-    parser.add_argument("--do_eval", action="store_true",
-                        help="Whether to run eval on the dev set.")
-    parser.add_argument("--do_predict", action="store_true",
-                        help="Whether to run predictions on the test set.")
-    parser.add_argument("--evaluate_during_training", action="store_true",
-                        help="Whether to run evaluation during training at each logging step.")
-    parser.add_argument("--do_lower_case", action="store_true",
-                        help="Set this flag if you are using an uncased model.")
-
-    parser.add_argument("--per_gpu_train_batch_size", default=1, type=int,
-                        help="Batch size per GPU/CPU for training.")
-    parser.add_argument("--per_gpu_eval_batch_size", default=8, type=int,
-                        help="Batch size per GPU/CPU for evaluation.")
-    parser.add_argument("--gradient_accumulation_steps", type=int, default=1,
-                        help="Number of updates steps to accumulate before performing a backward/update pass.")
-    parser.add_argument("--learning_rate", default=3e-5, type=float,
-                        help="The initial learning rate for Adam.")
-    parser.add_argument("--weight_decay", default=0.0, type=float,
-                        help="Weight decay if we apply some.")
-    parser.add_argument("--adam_epsilon", default=1e-8, type=float,
-                        help="Epsilon for Adam optimizer.")
-    parser.add_argument("--max_grad_norm", default=1.0, type=float,
-                        help="Max gradient norm.")
-    parser.add_argument("--num_train_epochs", default=3.0, type=float,
-                        help="Total number of training epochs to perform.")
-    parser.add_argument("--max_steps", default=-1, type=int,
-                        help="If > 0: set total number of training steps to perform. Override num_train_epochs.")
-    parser.add_argument("--warmup_steps", default=0, type=int,
-                        help="Linear warmup over warmup_steps.")
-
-    parser.add_argument("--logging_steps", type=int, default=50,
-                        help="Log every X updates steps.")
-    parser.add_argument("--save_steps", type=int, default=50,
-                        help="Save checkpoint every X updates steps.")
-    parser.add_argument("--eval_all_checkpoints", action="store_true",
-                        help="Evaluate all checkpoints starting with the same prefix as model_name ending and ending with step number")
-    parser.add_argument("--no_cuda", action="store_true",
-                        help="Avoid using CUDA when available")
-    parser.add_argument("--overwrite_output_dir", action="store_true",
-                        help="Overwrite the content of the output directory")
-    parser.add_argument("--overwrite_cache", action="store_true",
-                        help="Overwrite the cached training and evaluation sets")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="random seed for initialization")
-
-    parser.add_argument("--fp16", action="store_true",
-                        help="Whether to use 16-bit (mixed) precision (through NVIDIA apex) instead of 32-bit")
-    parser.add_argument("--fp16_opt_level", type=str, default="O1",
-                        help="For fp16: Apex AMP optimization level selected in ['O0', 'O1', 'O2', and 'O3']."
-                             "See details at https://nvidia.github.io/apex/amp.html")
-    parser.add_argument("--local_rank", type=int, default=-1,
-                        help="For distributed training: local_rank")
-    parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")
-    parser.add_argument("--server_port", type=str, default="", help="For distant debugging.")
-    parser.add_argument('--ner_dropout', type=float,default=0)
-    parser.add_argument('--tgt_snts_file',type=str)
-    args = parser.parse_args()
-
-    results = run_ner_with_args(args)
-
-    return results
 
 
 def run_ner_with_args(args):
@@ -562,14 +453,8 @@ def run_ner_with_args(args):
     # Setup distant debugging if needed
 
     # Setup CUDA, GPU & distributed training
-    if args.local_rank == -1 or args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        args.n_gpu = torch.cuda.device_count()
-    else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-        torch.cuda.set_device(args.local_rank)
-        device = torch.device("cuda", args.local_rank)
-        torch.distributed.init_process_group(backend="nccl")
-        args.n_gpu = 1
+    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    args.n_gpu = torch.cuda.device_count()
     args.device = device
     # Setup logging
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -585,8 +470,6 @@ def run_ner_with_args(args):
     # Use cross entropy ignore index as padding label id so that only real label ids contribute to the loss later
     pad_token_label_id = CrossEntropyLoss().ignore_index
     # Load pretrained model and tokenizer
-    if args.local_rank not in [-1, 0]:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
     args.model_type = args.model_type.lower()
 
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
@@ -600,13 +483,11 @@ def run_ner_with_args(args):
     model = BertForTokenClassification(config=config)
     model.bert.load_state_dict(model2.bert.state_dict())
 
-    if args.local_rank == 0:
-        torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
     model.to(args.device)
     logger.info("Training/evaluation parameters %s", args)
     # Training
     if args.do_train:
-        train_dataset = load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, mode="train")
+        train_dataset = load_and_cache_examples(args, tokenizer, labels, pad_token_label_id,file_path=args.train_file_path, mode="train")
         global_step, tr_loss = train(args, train_dataset, model, tokenizer, labels, pad_token_label_id)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
     # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
@@ -643,14 +524,12 @@ def run_ner_with_args(args):
             if global_step:
                 result1 = {"{}_{}".format(global_step, k): v for k, v in result1.items()}
             results.update(result1)
-            result2, _ = evaluate(args, model, tokenizer, labels, pad_token_label_id, mode="dev2", prefix='dev2_')
-            if result2 is not None:
-                results.update(result2)
 
         output_eval_file = f"eval_results.txt"
         with open(output_eval_file, "a+") as writer:
             writer.write(f'{args.model_name_or_path}\n')
-            writer.write(f"{os.path.basename(args.data_dir)}\n")
+            writer.write(f"{os.path.basename(args.train_file_path)}\n")
+            writer.write(f"{os.path.basename(args.eval_file_path)}\n")
             for key in sorted(results.keys()):
                 writer.write("{} = {}\n".format(key, str(results[key])))
     if args.do_predict and args.local_rank in [-1, 0]:
@@ -681,5 +560,3 @@ def run_ner_with_args(args):
     return results
 
 
-if __name__ == "__main__":
-    main()

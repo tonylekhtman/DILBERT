@@ -19,6 +19,8 @@ GPT and GPT-2 are fine-tuned using a causal language modeling (CLM) loss while B
 using a masked language modeling (MLM) loss.
 """
 from __future__ import absolute_import, division, print_function
+
+import hashlib
 import random
 
 import argparse
@@ -71,7 +73,8 @@ class TextDataset(Dataset):
         assert os.path.isfile(file_path)
         directory, filename = os.path.split(file_path)
         cached_features_file = os.path.join(directory,
-                                            'cached_lm_' + str(block_size) + '_' + filename)
+                                            'cached_lm_' + str(
+                                                block_size) + '_' + filename + '_' + f"{hashlib.md5((open(file_path, 'rb').read())).hexdigest()}")
 
         if os.path.exists(cached_features_file):
             logger.info("Loading features from cached file %s", cached_features_file)
@@ -88,7 +91,7 @@ class TextDataset(Dataset):
 
             cpus = multiprocessing.cpu_count()
             pool = multiprocessing.Pool(processes=cpus)
-            for cur_text_lines in [text_lines[i:i+100000] for i in  range(0,len(text_lines),100000)]:
+            for cur_text_lines in [text_lines[i:i + 100000] for i in range(0, len(text_lines), 100000)]:
                 tokenized_text_lines = pool.map(tokenizer.tokenize, cur_text_lines)
                 ids_text_lines = pool.map(tokenizer.convert_tokens_to_ids, tokenized_text_lines)
                 # tokenized_text = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
@@ -114,12 +117,13 @@ class CustomTextDataSet(Dataset):
     def __init__(self, tokenizer, file_paths, domains, block_size=512):
         for file_path in file_paths:
             assert os.path.isfile(file_path)
+        hashes = [hashlib.md5((open(file_path, 'rb').read())).hexdigest() for file_path in file_paths]
         assert len(file_paths) == len(domains)
         directory_domains, filename_domains = zip(*[os.path.split(file_path) for file_path in file_paths])
         assert all(x == directory_domains[0] for x in directory_domains) == True
         directory_domain = directory_domains[0]
         cached_features_file = os.path.join(directory_domain, 'cached_custom_lm_' + str(
-            block_size) + '_' + '_'.join(filename_domains))
+            block_size) + '_' + '_'.join(hashes))
         if os.path.exists(cached_features_file):
             logger.info("Loading features from cached file %s", cached_features_file)
             with open(cached_features_file, 'rb') as handle:
@@ -408,7 +412,8 @@ def train(args, train_dataset, model, tokenizer):
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
             model.train()
-            outputs = model(inputs, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
+            # outputs = model(inputs, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
+            outputs = model(inputs, masked_lm_labels=labels)
             loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel training
@@ -564,8 +569,6 @@ def main(args):
     # Set seed
     set_seed(args)
 
-
-
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path)
     tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
@@ -578,17 +581,11 @@ def main(args):
 
     model.to(args.device)
 
-
-
     logger.info("Training/evaluation parameters %s", args)
 
     # Training
     if args.do_train:
-
-
         train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False)
-
-
 
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)

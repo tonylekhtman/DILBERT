@@ -17,7 +17,7 @@ REST_DOMAIN_NAME = 'rest'
 HOTEL_DOMAIN_NAME = 'hotel'
 DEVICES_DOMAIN_NAME = 'devices'
 BOOKS_DOMAIN_NAME = 'books'
-domains = [LAPTOPS_DOMAIN_NAME, REST_DOMAIN_NAME, HOTEL_DOMAIN_NAME, DEVICES_DOMAIN_NAME, BOOKS_DOMAIN_NAME]
+domains = [LAPTOPS_DOMAIN_NAME, REST_DOMAIN_NAME]
 cats = {d: get_cats(d) for d in domains}
 
 
@@ -32,12 +32,12 @@ def get_max_cat_similarity(token_text, domain_categories, model):
     return max_similarity, max_cat
 
 
-def create_dataset(reviews_path, domain, dataset_output_path, config={}):
+def create_dataset(reviews_path, domain, dataset_output_path, embedding_model_path='embeddings/cc.en.300', config={}):
+    print(f'Creating the dataset cache for the CPP task for {domain}')
     if os.path.exists(dataset_output_path):
         return json.load(open(dataset_output_path, 'r+'))
     print(dataset_output_path)
-    embedding_model = FastText.load_fasttext_format(
-        config.get('embedding_model_path', 'embeddings/cc.en.300'))
+    embedding_model = FastText.load_fasttext_format(embedding_model_path)
     with open(reviews_path, 'r') as reviews_fp:
         reviews = reviews_fp.readlines()
     reviews_res = []
@@ -53,9 +53,6 @@ def create_dataset(reviews_path, domain, dataset_output_path, config={}):
         reviews_res.append((review_res, review))
     json.dump(reviews_res, open(dataset_output_path, 'w+'))
     return reviews_res
-
-
-
 
 
 def create_classification_dataset_for_threshold(reviews_to_similarities, domains, thresholds,
