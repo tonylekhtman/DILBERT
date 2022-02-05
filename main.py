@@ -114,6 +114,10 @@ try:
     if d['classification']:
         reviews_to_similarities = {}
         for domain_name, file_path in zip(selected_domain_names, file_paths):
+            if not os.path.exists(embedding_model_path):
+                create_custom_embeddings(
+                    [f'unlabeled_data/{x}.raw' for x in selected_domain_names],
+                    embedding_model_path)
             reviews_to_similarities[domain_name] = create_dataset(
                 file_path,
                 domain_name,

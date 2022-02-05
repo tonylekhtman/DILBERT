@@ -1,6 +1,6 @@
 absa_dirs:
 - ae_files
-classification: true
+classification: false
 classification_domain: laptops
 classification_epochs: 1
 classification_samples_per_domain: 2000
@@ -19,7 +19,6 @@ gpu_num: '1'
 num_ae_epochs: 3
 ae_lr: 5e-5
 ae_train_batch_size: 32
-output_path: dilbert-v1-new3
 seed: 1948
 selected_domains:
 - laptops

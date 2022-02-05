@@ -40,5 +40,5 @@ only_rest_review_df = yelp_review_df[yelp_review_df['business_id'].isin(only_res
 only_rest_review_df.to_csv('only_rest_reviews.csv')
 
 with open('rest.raw', 'w+') as yelp_reviews_fp:
-    for review in only_rest_review_df.sample(240000):
-        yelp_reviews_fp.write(review)
+    for review in only_rest_review_df.sample(240000)['text']:
+        yelp_reviews_fp.write(f'{review}\n')
