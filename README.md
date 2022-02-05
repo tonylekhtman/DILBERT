@@ -103,7 +103,6 @@ masking: unigram
 pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
 num_cmlm_epochs: 1
-output_path: dilbert-v1-new2
 num_ae_epochs: 3
 ae_lr: 5e-5
 ae_train_batch_size: 32
@@ -118,37 +117,35 @@ tasks:
 
 Explanation on the different fields: 
 
-absa_dirs - The dir where the domain directories exist.
+`absa_dirs` - The dir where the domain directories exist.
 
-classification - Whether to run the CPP step.
+`classification` - Whether to run the CPP step.
 
-classification_domain - on which domain to run the CPP. If you remove this column, it will run on both domains.
+`classification_domain` - on which domain to run the CPP. If you remove this column, it will run on both domains.
 
-classification_epochs - Number of epochs for CPP.
+`classification_epochs` - Number of epochs for CPP.
 
-classification_samples_per_domain - Number of samples for CPP.
+`classification_samples_per_domain` - Number of samples for CPP.
 
-mlm_thresholds - What percent of tokens to keep unmasked.
+`mlm_thresholds` - What percent of tokens to keep unmasked.
 
-classification_thresholds - What is the similarity threshold for the CPP task.
+`classification_thresholds` - What is the similarity threshold for the CPP task.
 
-masking - Whether to run CMLM, `none` for no CMLM, `unigram` for CMLM
+`masking` - Whether to run CMLM, `none` for no CMLM, `unigram` for CMLM
 
-model_type - What kind of transformer to use. Tested on bert.
+`model_type` - What kind of transformer to use. Tested on bert.
 
-pre_trained_model_name_or_path - What subtype of the model_type to use. Tested on bert-base-uncased
+`pre_trained_model_name_or_path` - What subtype of the model_type to use. Tested on bert-base-uncased
 
-num_ae_epochs - number of epochs for the fine-tune on Aspect Extraction.
+`num_ae_epochs` - number of epochs for the fine-tune on Aspect Extraction.
 
-num_cmlm_epochs - number of epochs for the cmlm pre-training.
+`num_cmlm_epochs` - number of epochs for the cmlm pre-training.
 
-output_path - The output name for the cmlm model. Optional.
+`selected_domains` - The domains to use in the pre-training steps: CMLM and CPP.
 
-selected_domains - The domains to use in the pre-training steps: CMLM and CPP.
+`embedding_model` - Whether to use custom embeddings or not. Options are custom_fasttext or fasttext.
 
-embedding_model - Whether to use custom embeddings or not. Options are custom_fasttext or fasttext.
-
-tasks - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
+`tasks` - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
 
 
 ## How to Cite DILBERT
