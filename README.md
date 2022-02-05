@@ -34,6 +34,8 @@ You can see the files: `category_files/laptops_categories.txt` and `category_fil
 ### 2. Obtain unlabeled data for your source and target domain
 In this work we've obtained the unlabeled data from  Amazon and Yelp.
 
+**Notice: The files in the unlabeled_data dir are only samples! To get the full unlabeled_data you need to run the scripts**
+
 To get the restaurants unlabeled data you can go to: https://www.yelp.com/dataset
 
 Put the files: yelp_academic_dataset_business.json.gz and yelp_academic_dataset_review.json.gz in the `unlabeled_data` dir and then:
