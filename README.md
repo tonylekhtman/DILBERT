@@ -69,7 +69,9 @@ to O
 us O
 . O
 ```
-There are already directories for: rest, laptops and mams datasets.
+There are already directories for: rest, laptops and mams datasets. 
+
+If you wish to evaluate on a new domain create a directory for your domain under `ae_files` directory with files formatted as the examples.
 
 ### 4. Run a training
 The `main.py` script runs the whole process.
