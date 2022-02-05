@@ -38,7 +38,7 @@ In this work we've obtained the unlabeled data from  Amazon and Yelp.
 
 To get the restaurants unlabeled data you can go to: https://www.yelp.com/dataset
 
-Put the files: yelp_academic_dataset_business.json.gz and yelp_academic_dataset_review.json.gz in the `unlabeled_data` dir and then:
+Put the files: `yelp_academic_dataset_business.json.gz` and `yelp_academic_dataset_review.json.gz` in the `unlabeled_data` dir and then:
 ```
 cd unlabeled_data
 python get_rest_domain_data.py
@@ -48,7 +48,7 @@ This will run for about 10 minutes. You can also put your own unlabeled data ins
 
 
 To get the laptops unlabeled data you can go to: https://nijianmo.github.io/amazon/index.html to the Electronics category.
-Put the files: meta_Electronics.json.gz and Electronics.json.gz in the `unlabeled_data` dir and then:
+Put the files: `meta_Electronics.json.gz` and `Electronics.json.gz` in the `unlabeled_data` dir and then:
 ```
 cd unlabeled_data
 python get_laptop_domain_data.py
