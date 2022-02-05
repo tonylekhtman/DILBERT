@@ -21,8 +21,6 @@ def getDF(path):
     i = 0
     df = {}
     for d in tqdm(parse(path)):
-        if i == 220000:
-            break
         df[i] = d
         i += 1
     return pd.DataFrame.from_dict(df, orient='index')
@@ -32,7 +30,7 @@ def getDF(path):
 
 def is_category_laptop(row):
     for x in relevant_cats:
-        if x in row['category'] :
+        if x in row['category']:
             return True
     return False
 
