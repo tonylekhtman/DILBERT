@@ -91,6 +91,7 @@ try:
     else:
         selected_thresholds = ''
     output_path = d.get('output_path', f'{d["pre_trained_model_name_or_path"]}_{hashed_content}_{selected_thresholds}_{d.get("embedding_model", "fasttext")}')
+    d['output_path'] = output_path
     list_of_args += ["--output_dir", output_path]
     model_type = d['model_type']
     model_name_or_path = d['pre_trained_model_name_or_path']
@@ -114,7 +115,7 @@ try:
     if d['classification']:
         reviews_to_similarities = {}
         for domain_name, file_path in zip(selected_domain_names, file_paths):
-            if not os.path.exists(embedding_model_path):
+            if not os.path.exists(f'{embedding_model_path}.bin'):
                 create_custom_embeddings(
                     [f'unlabeled_data/{x}.raw' for x in selected_domain_names],
                     embedding_model_path)

@@ -42,14 +42,19 @@ def create_dataset(reviews_path, domain, dataset_output_path, embedding_model_pa
         reviews = reviews_fp.readlines()
     reviews_res = []
     sampled_reviews = [y for x in random.sample(reviews, min(10000, len(reviews))) for y in sent_tokenize(x)]
+    saved_res = defaultdict(dict)
     for review in tqdm(sampled_reviews):
         review_res = {}
         for cat in cats[domain]:
             review_res[cat] = {}
             for token in review.split():
-                similarity = calc_similarity(token, cat, embedding_model)
+                if saved_res.get(cat,{}).get(token, None) is None:
+                    similarity = calc_similarity(token, cat, embedding_model)
+                else:
+                    similarity = saved_res.get(cat).get(token, None)
 
                 review_res[cat][token] = str(similarity[0][0]) if similarity is not None else str(-1)
+                saved_res[cat][token] = review_res[cat][token]
         reviews_res.append((review_res, review))
     json.dump(reviews_res, open(dataset_output_path, 'w+'))
     return reviews_res

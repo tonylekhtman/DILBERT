@@ -1,6 +1,6 @@
 absa_dirs:
 - ae_files
-classification: false
+classification: true
 classification_domain: laptops
 classification_epochs: 1
 classification_samples_per_domain: 2000
