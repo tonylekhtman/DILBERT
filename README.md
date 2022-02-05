@@ -100,7 +100,9 @@ pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
 num_cmlm_epochs: 1
 output_path: dilbert-v1-new2
-num_ner_epochs: 3
+num_ae_epochs: 3
+ae_lr: 5e-5
+ae_train_batch_size: 32
 seed: 1948
 selected_domains:
 - laptops
@@ -132,11 +134,11 @@ model_type - What kind of transformer to use. Tested on bert.
 
 pre_trained_model_name_or_path - What subtype of the model_type to use. Tested on bert-base-uncased
 
-num_ner_epochs - number of epochs for the fine-tune on Aspect Extraction.
+num_ae_epochs - number of epochs for the fine-tune on Aspect Extraction.
 
 num_cmlm_epochs - number of epochs for the cmlm pre-training.
 
-output_path - The output name for the cmlm model.
+output_path - The output name for the cmlm model. Optional.
 
 selected_domains - The domains to use in the pre-training steps: CMLM and CPP.
 

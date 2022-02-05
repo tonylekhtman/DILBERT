@@ -5,18 +5,20 @@ classification_domain: laptops
 classification_epochs: 1
 classification_samples_per_domain: 2000
 classification_thresholds:
-  rest: 0.3
-  laptops: 0.3
+  rest: 0.406
+  laptops: 0.362
 pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
 mlm_thresholds:
   rest: 90
   laptops: 90
-masking: unigram
+masking: none
 num_cmlm_epochs: 1
 gpu: true
 gpu_num: '1'
-num_ner_epochs: 3
+num_ae_epochs: 3
+ae_lr: 5e-5
+ae_train_batch_size: 32
 output_path: dilbert-v1-new3
 seed: 1948
 selected_domains:
@@ -24,4 +26,4 @@ selected_domains:
 - rest
 embedding_model: custom_fasttext
 tasks:
-  - laptops_mams
+  - mams_laptops

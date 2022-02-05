@@ -75,18 +75,10 @@ def train(model, training_loader, device, optimizer, scheduler, epoch):
         model.train()
         outputs = model(ids, mask, token_type_ids)
 
-        # a = np.array(targets.cpu().detach().numpy().tolist())
-        #
-        # b = np.array(torch.sigmoid(outputs[0]).cpu().detach().numpy().tolist()) >= 0.5
-        # accuracy = metrics.accuracy_score(a, b)
-        # print(f'train accuracy: {accuracy}')
-
-        # optimizer.zero_grad()
         loss = loss_fn(outputs[0], targets)
         if _ % 5000 == 0:
             print(f'Epoch: {epoch}, Loss:  {loss.item()}')
 
-        # optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         scheduler.step()
@@ -115,60 +107,53 @@ def validation(model, device, testing_loader, epoch):
 
 
 def run_classification_task(dataset_filename, num_of_epochs, pt_model_dir, output_dir, no_cuda=False):
-    # global device, training_loader, testing_loader, model, optimizer
     device = 'cuda' if cuda.is_available() and not no_cuda else 'cpu'
     df = pd.read_csv(dataset_filename)
     df['list'] = df[df.columns[2:]].values.tolist()
     new_df = df[['text', 'list']].copy()
-    print(new_df.head())
-    MAX_LEN = 200
-    TRAIN_BATCH_SIZE = 8
-    VALID_BATCH_SIZE = 4
-    EPOCHS = num_of_epochs
-    LEARNING_RATE = 5e-5
-    SEED = 200
-    bertish = pt_model_dir
-    tokenizer = BertTokenizer.from_pretrained(bertish)
+    max_len = 200
+    train_batch_size = 8
+    valid_batch_size = 4
+    epochs = num_of_epochs
+    learning_rate = 5e-5
+    seed = 200
+    tokenizer = BertTokenizer.from_pretrained(pt_model_dir)
     train_size = 0.8
-    train_dataset = new_df.sample(frac=train_size, random_state=SEED).reset_index(drop=True)
+    train_dataset = new_df.sample(frac=train_size, random_state=seed).reset_index(drop=True)
     test_dataset = new_df.drop(train_dataset.index).reset_index(drop=True)
     print("FULL Dataset: {}".format(new_df.shape))
     print("TRAIN Dataset: {}".format(train_dataset.shape))
     print("TEST Dataset: {}".format(test_dataset.shape))
-    training_set = CustomDataset(train_dataset, tokenizer, MAX_LEN)
-    testing_set = CustomDataset(test_dataset, tokenizer, MAX_LEN)
-    train_params = {'batch_size': TRAIN_BATCH_SIZE,
+    training_set = CustomDataset(train_dataset, tokenizer, max_len)
+    testing_set = CustomDataset(test_dataset, tokenizer, max_len)
+    train_params = {'batch_size': train_batch_size,
                     'shuffle': True,
                     'num_workers': 0
                     }
-    test_params = {'batch_size': VALID_BATCH_SIZE,
+    test_params = {'batch_size': valid_batch_size,
                    'shuffle': True,
                    'num_workers': 0
                    }
     training_loader = DataLoader(training_set, **train_params)
     testing_loader = DataLoader(testing_set, **test_params)
-    NUM_OF_CLASSES = len(training_set.targets[0])
-    config = BertConfig.from_pretrained(bertish, num_labels=NUM_OF_CLASSES)
-    model = BertForSequenceClassification.from_pretrained(bertish, config=config)
+    num_of_classes = len(training_set.targets[0])
+    config = BertConfig.from_pretrained(pt_model_dir, num_labels=num_of_classes)
+    model = BertForSequenceClassification.from_pretrained(pt_model_dir, config=config)
     model.to(device)
-    t_total = t_total = len(training_loader) * EPOCHS
-    # optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
+    t_total = len(training_loader) * epochs
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
         {"params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
          "weight_decay": 0.0},
         {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0}
     ]
-    # for name, param in model.named_parameters():
-    #     if any(c in name for c in[str(x) for x in list(range(11))]):
-    #         param.requires_grad=False
-    optimizer = Adam(optimizer_grouped_parameters, lr=LEARNING_RATE, eps=1e-8)
+    optimizer = Adam(optimizer_grouped_parameters, lr=learning_rate, eps=1e-8)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=t_total)
-    set_seed(SEED)
+    set_seed(seed)
     model.zero_grad()
-    if os.path.exists(f'{output_dir}_{EPOCHS-1}'):
+    if os.path.exists(f'{output_dir}_{epochs-1}'):
         return 0, 0
-    for epoch in range(EPOCHS):
+    for epoch in range(epochs):
         train(model, training_loader, device, optimizer, scheduler, epoch)
         outputs, targets, loss = validation(model, device, testing_loader, epoch)
         outputs = np.array(outputs) >= 0.5

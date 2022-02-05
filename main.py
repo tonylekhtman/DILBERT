@@ -85,16 +85,20 @@ try:
         list_of_args += ['--no_cuda']
     if d.get('mlm_randomness', True):
         list_of_args += ['--mlm_randomness']
-    output_path = d['output_path']
+    hashed_content = '_'.join(content_hashes[x] for x in selected_domain_names)
+    if 'mlm_thresholds' in d:
+        selected_thresholds = '_'.join([str(d['mlm_thresholds'][x]) for x in selected_domain_names])
+    else:
+        selected_thresholds = ''
+    output_path = d.get('output_path', f'{d["pre_trained_model_name_or_path"]}_{hashed_content}_{selected_thresholds}_{d.get("embedding_model", "fasttext")}')
     list_of_args += ["--output_dir", output_path]
     model_type = d['model_type']
     model_name_or_path = d['pre_trained_model_name_or_path']
     seed = d['seed']
-    save_steps = d['save_steps']
     num_train_epochs = str(d.get('num_cmlm_epochs', 1.0))
     list_of_args += ['--model_type', model_type, '--model_name_or_path', model_name_or_path, '--seed',
                      str(seed),
-                     '--save_steps', str(d['save_steps']), '--num_train_epochs', num_train_epochs]
+                     '--save_steps', '0', '--num_train_epochs', num_train_epochs]
     list_of_args += ['--domains'] + selected_domain_names
     file_paths = [f'unlabeled_data/{domain}.raw' for domain in selected_domain_names]
     list_of_args += ['--file_paths'] + file_paths
@@ -143,20 +147,15 @@ try:
         class_models = []
         for i in range(d['classification_epochs']):
             class_models.append(f'{output_dir}_{i}')
-        output_models = class_models  # + output_models
-    if d.get('tasks'):
-        tasks = d['tasks']
-    elif d.get('in_domain', False):
-        tasks = selected_domain_names
-    else:
-        tasks = [f'{x[0]}_{x[1]}' for x in list(itertools.product(selected_domain_names, repeat=2)) if x[0] != x[1]]
+        output_models = class_models
+    tasks = d['tasks']
     d['server'] = socket.gethostname()
     d['training_file'] = training_file
-    d['num_ner_epochs'] = d.get('num_ner_epochs', 3)
+    d['num_ner_epochs'] = d.get('num_ae_epochs', 3)
     d['ner_dropout'] = d.get('ner_dropout', 0)
     d['f1_threshold'] = d.get('f1_threshold', 0.5)
     d['ae_lr'] = d.get('ae_lr', 5e-5)
-    d["train_batch_size"] = d.get('train_batch_size', 32)
+    d["train_batch_size"] = d.get('ae_train_batch_size', 32)
     run_benchmark(output_models, tasks, d['absa_dirs'], os.path.basename(training_file),
                   d.get('gpu', True), d)
 except Exception as e:
