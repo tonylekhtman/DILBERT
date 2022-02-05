@@ -32,8 +32,7 @@ def getDF(path):
 
 def is_category_laptop(row):
     for x in relevant_cats:
-        # if x in row['category'] :
-        if x in row['categories'][0]:
+        if x in row['category'] :
             return True
     return False
 
