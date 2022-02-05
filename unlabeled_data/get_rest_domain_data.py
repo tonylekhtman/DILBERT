@@ -1,6 +1,8 @@
 import pandas as pd
 import gzip
 
+from tqdm import tqdm
+
 
 def parse(path):
     g = gzip.open(path, 'rb')
@@ -11,7 +13,7 @@ def parse(path):
 def getDF(path):
     i = 0
     df = {}
-    for d in parse(path):
+    for d in tqdm(parse(path)):
         df[i] = d
         i += 1
     return pd.DataFrame.from_dict(df, orient='index')

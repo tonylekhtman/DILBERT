@@ -1,6 +1,7 @@
 import pandas as pd
 import gzip
 
+from tqdm import tqdm
 
 relevant_cats = ['Laptops', 'laptops']
 metadata_file = 'meta_Electronics.json.gz'
@@ -19,7 +20,7 @@ def parse(path):
 def getDF(path):
     i = 0
     df = {}
-    for d in parse(path):
+    for d in tqdm(parse(path)):
         if i == 220000:
             break
         df[i] = d

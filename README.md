@@ -42,6 +42,8 @@ cd unlabeled_data
 python get_rest_domain_data.py
 ```
 
+This will run for about 10 minutes. You can also put your own unlabeled data instead.
+
 
 To get the laptops unlabeled data you can go to: https://nijianmo.github.io/amazon/index.html to the Electronics category.
 Put the files: meta_Electronics.json.gz and Electronics.json.gz in the `unlabeled_data` dir and then:
