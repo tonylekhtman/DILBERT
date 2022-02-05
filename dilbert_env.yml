@@ -193,7 +193,6 @@ dependencies:
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.7
     - pynacl==1.4.0
-    - python-graphviz==0.19.1
     - python-slugify==4.0.0
     - pywikibot==3.0.20200111
     - pyyaml==5.2
