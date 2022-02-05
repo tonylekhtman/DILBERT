@@ -79,9 +79,9 @@ To run the full process you can simply run:
 python main.py --training_file trainins/sample.yaml --gpu 0
 ```
 
-training_file - A yaml that sets the experiment
+`training_file` - A yaml that sets the experiment
 
-gpu - On which device to run. DILBERT was run on a single gpu card.
+`gpu` - On which device to run. DILBERT was run on a single gpu card.
 
 ## A more detailed explanation of the training yaml:
 There is an example in `trainings/sample.yaml`
