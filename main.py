@@ -156,8 +156,8 @@ try:
     tasks = d['tasks']
     d['server'] = socket.gethostname()
     d['training_file'] = training_file
-    d['num_ner_epochs'] = d.get('num_ae_epochs', 3)
-    d['ner_dropout'] = d.get('ner_dropout', 0)
+    d['num_ae_epochs'] = d.get('num_ae_epochs', 3)
+    d['ae_dropout'] = d.get('ae_dropout', 0)
     d['f1_threshold'] = d.get('f1_threshold', 0.5)
     d['ae_lr'] = d.get('ae_lr', 5e-5)
     d["train_batch_size"] = d.get('ae_train_batch_size', 32)

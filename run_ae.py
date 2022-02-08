@@ -43,7 +43,7 @@ from cat_config import get_cats
 from max_sim import get_max_cat_similarity, calc_similarity
 # from sentence_embeddings import get_best_examples
 from other_eval import evaluate_chunk
-from utils_ner import convert_examples_to_features, get_labels, read_examples_from_file
+from utils_ae import convert_examples_to_features, get_labels, read_examples_from_file
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
     set_seed(args)  # Added here for reproductibility (even between python 2 and 3)
     for _ in train_iterator:
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
-        non_trained_steps = random.sample(range(len(epoch_iterator)), int(args.ner_dropout * len(epoch_iterator)))
+        non_trained_steps = random.sample(range(len(epoch_iterator)), int(args.ae_dropout * len(epoch_iterator)))
         for step, batch in enumerate(epoch_iterator):
 
             if step in non_trained_steps:
@@ -347,7 +347,7 @@ def load_and_cache_examples(args, tokenizer, labels, pad_token_label_id, file_pa
 
 
 
-def run_ner_with_args(args):
+def run_ae_with_args(args):
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
         raise ValueError(

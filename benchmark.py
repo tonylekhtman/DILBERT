@@ -9,15 +9,15 @@ import pandas as pd
 import uuid
 from nltk import sent_tokenize
 
-from run_ner import MODEL_CLASSES, run_ner_with_args
+from run_ae import MODEL_CLASSES, run_ae_with_args
 
 parser = argparse.ArgumentParser()
 
 ## Required parameters
 parser.add_argument("--train_file_path", default=None, type=str, required=True,
-                    help="The input data dir. Should contain the training files for the CoNLL-2003 NER task.")
+                    help="The train file path in CoNLL-2003 format")
 parser.add_argument("--eval_file_path", default=None, type=str, required=True,
-                    help="The input data dir. Should contain the training files for the CoNLL-2003 NER task.")
+                    help="The eval file path in CoNLL-2003 format")
 parser.add_argument("--model_type", default=None, type=str, required=True,
                     help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
 parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
@@ -93,11 +93,11 @@ parser.add_argument("--local_rank", type=int, default=-1,
                     help="For distributed training: local_rank")
 parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")
 parser.add_argument("--server_port", type=str, default="", help="For distant debugging.")
-parser.add_argument('--ner_dropout', type=float, default=0)
-parser.add_argument('--ner_sampled_examples', action='store_true')
+parser.add_argument('--ae_dropout', type=float, default=0)
+parser.add_argument('--ae_sampled_examples', action='store_true')
 parser.add_argument('--tgt_snts_file', type=str)
 parser.add_argument('--sampling_model_path', type=str)
-parser.add_argument('--ner_sampled_percent', type=float, default=0.8)
+parser.add_argument('--ae_sampled_percent', type=float, default=0.8)
 parser.add_argument('--f1_threshold', type=float)
 
 
@@ -113,21 +113,21 @@ def run_single_task(train_file_path, eval_file_path, task, pt_model, data_dirs, 
     for data_dir in data_dirs:
         seed = config['seed']  # random.randrange(100000)
 
-        ner_args = ["--train_file_path", train_file_path, "--eval_file_path", eval_file_path, "--model_type", "bert",
+        ae_args = ["--train_file_path", train_file_path, "--eval_file_path", eval_file_path, "--model_type", "bert",
                     "--model_name_or_path",
                     f"{pt_model}", "--output",
                     f"ae_models/{output}", "--labels", "ae_files/labels.txt", "--do_eval",
                     "--seed", str(seed), "--save_steps", "750", "--per_gpu_train_batch_size",
                     str(config['train_batch_size']),
                     "--max_seq_length", "128", "--overwrite_output_dir", "--do_lower_case", "--do_train",
-                    "--num_train_epochs", str(config['num_ner_epochs']), '--ner_dropout', str(config['ner_dropout']),
-                    '--ner_sampled_examples', '--tgt_snts_file', 'stam', '--sampling_model_path', f"{pt_model}",
+                    "--num_train_epochs", str(config['num_ae_epochs']), '--ae_dropout', str(config['ae_dropout']),
+                    '--ae_sampled_examples', '--tgt_snts_file', 'stam', '--sampling_model_path', f"{pt_model}",
                     '--f1_threshold', str(config['f1_threshold']), '--learning_rate', str(config['ae_lr'])]
         if not gpu:
-            ner_args += ['--no_cuda']
+            ae_args += ['--no_cuda']
         args = parser.parse_args(
-            ner_args)
-        results = run_ner_with_args(args)
+            ae_args)
+        results = run_ae_with_args(args)
         for metric in results:
             metrics[metric].append(results[metric])
     mean_results = {}
@@ -137,7 +137,7 @@ def run_single_task(train_file_path, eval_file_path, task, pt_model, data_dirs, 
     return mean_results
 
 
-def run_benchmark(models, tasks, ner_data_files_dirs, unique_id=None, gpu=True, config=None):
+def run_benchmark(models, tasks, ae_data_files_dirs, unique_id=None, gpu=True, config=None):
     dfs = []
     num_seeds = 1
     for model in models:
@@ -146,7 +146,7 @@ def run_benchmark(models, tasks, ner_data_files_dirs, unique_id=None, gpu=True, 
             splitted_task = task.split('_')
             train_file_path = f'ae_files/{splitted_task[0]}/train.txt'
             eval_file_path = f'ae_files/{splitted_task[-1]}/dev.txt'
-            f1_res = run_single_task(train_file_path, eval_file_path, task, model, ner_data_files_dirs, gpu,
+            f1_res = run_single_task(train_file_path, eval_file_path, task, model, ae_data_files_dirs, gpu,
                                      config)
             model_name = os.path.basename(model)
             final_results[f'{model_name}_{task}'] = f1_res
