@@ -34,21 +34,21 @@ You can see the files: `category_files/laptops_categories.txt` and `category_fil
 ### 2. Obtain unlabeled data for your source and target domain
 In this work we've obtained the unlabeled data from  Amazon and Yelp.
 
+Getting the unlabeled data may take some time. If you have your own unlabeled data you can just put it in the `unlabeled_data` dir with the filename `<domain>.raw`.
+
 **Notice: The files in the unlabeled_data dir are only samples! To get the full unlabeled_data you need to run the scripts**
 
 To get the restaurants unlabeled data you can go to: https://www.yelp.com/dataset
 
-Put the files: yelp_academic_dataset_business.json.gz and yelp_academic_dataset_review.json.gz in the `unlabeled_data` dir and then:
+Put the files: `yelp_academic_dataset_business.json.gz` and `yelp_academic_dataset_review.json.gz` in the `unlabeled_data` dir and then:
 ```
 cd unlabeled_data
 python get_rest_domain_data.py
 ```
 
-This will run for about 10 minutes. You can also put your own unlabeled data instead.
-
 
 To get the laptops unlabeled data you can go to: https://nijianmo.github.io/amazon/index.html to the Electronics category.
-Put the files: meta_Electronics.json.gz and Electronics.json.gz in the `unlabeled_data` dir and then:
+Put the files: `meta_Electronics.json.gz` and `Electronics.json.gz` in the `unlabeled_data` dir and then:
 ```
 cd unlabeled_data
 python get_laptop_domain_data.py
@@ -69,7 +69,9 @@ to O
 us O
 . O
 ```
-There are already directories for: rest, laptops and mams datasets.
+There are already directories for: rest, laptops and mams datasets. 
+
+If you wish to evaluate on a new domain create a directory for your domain under `ae_files` directory with files formatted as the examples.
 
 ### 4. Run a training
 The `main.py` script runs the whole process.
@@ -79,9 +81,9 @@ To run the full process you can simply run:
 python main.py --training_file trainins/sample.yaml --gpu 0
 ```
 
-training_file - A yaml that sets the experiment
+`training_file` - A yaml that sets the experiment
 
-gpu - On which device to run. DILBERT was run on a single gpu card.
+`gpu` - On which device to run. DILBERT was run on a single gpu card.
 
 ## A more detailed explanation of the training yaml:
 There is an example in `trainings/sample.yaml`
@@ -103,7 +105,6 @@ masking: unigram
 pre_trained_model_name_or_path: bert-base-uncased
 model_type: bert
 num_cmlm_epochs: 1
-output_path: dilbert-v1-new2
 num_ae_epochs: 3
 ae_lr: 5e-5
 ae_train_batch_size: 32
@@ -118,37 +119,35 @@ tasks:
 
 Explanation on the different fields: 
 
-absa_dirs - The dir where the domain directories exist.
+`absa_dirs` - The dir where the domain directories exist.
 
-classification - Whether to run the CPP step.
+`classification` - Whether to run the CPP step.
 
-classification_domain - on which domain to run the CPP. If you remove this column, it will run on both domains.
+`classification_domain` - on which domain to run the CPP. If you remove this column, it will run on both domains.
 
-classification_epochs - Number of epochs for CPP.
+`classification_epochs` - Number of epochs for CPP.
 
-classification_samples_per_domain - Number of samples for CPP.
+`classification_samples_per_domain` - Number of samples for CPP.
 
-mlm_thresholds - What percent of tokens to keep unmasked.
+`mlm_thresholds` - What percent of tokens to keep unmasked.
 
-classification_thresholds - What is the similarity threshold for the CPP task.
+`classification_thresholds` - What is the similarity threshold for the CPP task.
 
-masking - Whether to run CMLM, `none` for no CMLM, `unigram` for CMLM
+`masking` - Whether to run CMLM, `none` for no CMLM, `unigram` for CMLM
 
-model_type - What kind of transformer to use. Tested on bert.
+`model_type` - What kind of transformer to use. Tested on bert.
 
-pre_trained_model_name_or_path - What subtype of the model_type to use. Tested on bert-base-uncased
+`pre_trained_model_name_or_path` - What subtype of the model_type to use. Tested on bert-base-uncased
 
-num_ae_epochs - number of epochs for the fine-tune on Aspect Extraction.
+`num_ae_epochs` - number of epochs for the fine-tune on Aspect Extraction.
 
-num_cmlm_epochs - number of epochs for the cmlm pre-training.
+`num_cmlm_epochs` - number of epochs for the cmlm pre-training.
 
-output_path - The output name for the cmlm model. Optional.
+`selected_domains` - The domains to use in the pre-training steps: CMLM and CPP.
 
-selected_domains - The domains to use in the pre-training steps: CMLM and CPP.
+`embedding_model` - Whether to use custom embeddings or not. Options are custom_fasttext or fasttext.
 
-embedding_model - Whether to use custom embeddings or not. Options are custom_fasttext or fasttext.
-
-tasks - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
+`tasks` - Which setups to run. For example: `rest_laptop` for rest to laptop, `rest` for in domain setup.
 
 
 ## How to Cite DILBERT
